@@ -1,4 +1,3 @@
-/* EasyFill popup logic — original code, MIT */
 (() => {
   "use strict";
   const NS = globalThis.EasyFill;
@@ -22,7 +21,7 @@
 
   function render() {
     $("site").textContent = NS.hostOf(tab && tab.url) || "this page";
-    $("count").textContent = data.values.length + " values · unlimited";
+    $("count").textContent = data.values.length + " values | unlimited";
     const list = $("forms");
     list.textContent = "";
     const sorted = [...data.forms].sort((a, b) => {
@@ -39,15 +38,15 @@
         name.appendChild(el("span", "badge", "this site"));
       }
       info.appendChild(name);
-      info.appendChild(el("div", "meta", (f.fields || []).length + " fields · " + (f.host || "page")));
+      info.appendChild(el("div", "meta", (f.fields || []).length + " fields | " + (f.host || "page")));
       const btn = el("button", null, "Fill");
       btn.addEventListener("click", async () => {
         btn.disabled = true;
-        status("Filling…");
+        status("Filling...");
         const res = await browser.runtime.sendMessage({ type: "ef-fill-form", tabId: tab.id, formId: f.id }).catch(() => null);
         btn.disabled = false;
         if (res && res.ok) status(`Filled ${res.filled}/${res.total} fields.`);
-        else status("Could not fill — fields not found on this page.", true);
+        else status("Could not fill - fields not found on this page.", true);
       });
       row.appendChild(info);
       row.appendChild(btn);
@@ -57,7 +56,7 @@
 
   $("save").addEventListener("click", async () => {
     $("save").disabled = true;
-    status("Saving…");
+    status("Saving...");
     const res = await browser.runtime.sendMessage({ type: "ef-save-form", tabId: tab.id }).catch(() => null);
     $("save").disabled = false;
     if (res && res.ok) {

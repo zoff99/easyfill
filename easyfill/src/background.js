@@ -1,7 +1,5 @@
 /*
- * EasyFill — background page (persistent, Manifest V2)
- * Part of EasyFill, an open-source (MIT) one-click form filler for Firefox.
- * Original code — not derived from SimpleFill or any other extension.
+ * EasyFill - background page (persistent, Manifest V2)
  *
  * Responsibilities:
  *   - build the right-click menu (values, saved forms, save/settings)
@@ -35,26 +33,25 @@
 
     browser.menus.create({ id: "ef-root", title: "EasyFill", contexts: page });
 
-    // Insert value → (only when right-clicking a field)
-    browser.menus.create({ id: "ef-values", parentId: "ef-root", title: "Insert value", contexts: ["editable"] });
+    // Saved values, listed directly (only when right-clicking a field)
     if (data.values.length === 0) {
       browser.menus.create({
-        id: "ef-novalues", parentId: "ef-values", contexts: ["editable"],
-        title: "No values yet — open Settings"
+        id: "ef-novalues", parentId: "ef-root", contexts: ["editable"],
+        title: "No values yet - open Settings"
       });
     } else {
       for (const v of data.values) {
         const p = preview(v.value, 42);
         browser.menus.create({
-          id: "ef-value:" + v.id, parentId: "ef-values", contexts: ["editable"],
-          title: menuTitle(preview(v.name, 28) + (p ? "  —  " + p : ""))
+          id: "ef-value:" + v.id, parentId: "ef-root", contexts: ["editable"],
+          title: menuTitle(preview(v.name, 28) + (p ? " - " + p : ""))
         });
       }
     }
 
-    browser.menus.create({ id: "ef-sep1", parentId: "ef-root", type: "separator", contexts: page });
+    browser.menus.create({ id: "ef-sep1", parentId: "ef-root", type: "separator", contexts: ["editable"] });
 
-    // Fill form →
+    // Fill form ->
     browser.menus.create({ id: "ef-forms", parentId: "ef-root", title: "Fill form", contexts: page });
     if (data.forms.length === 0) {
       browser.menus.create({
@@ -66,14 +63,14 @@
       for (const f of sorted) {
         browser.menus.create({
           id: "ef-fill:" + f.id, parentId: "ef-forms", contexts: page,
-          title: menuTitle(preview(f.name, 44) + "  ·  " + (f.fields || []).length + " fields")
+          title: menuTitle(preview(f.name, 44) + " | " + (f.fields || []).length + " fields")
         });
       }
     }
 
     browser.menus.create({ id: "ef-save", parentId: "ef-root", title: "Save this form", contexts: page });
     browser.menus.create({ id: "ef-sep2", parentId: "ef-root", type: "separator", contexts: page });
-    browser.menus.create({ id: "ef-settings", parentId: "ef-root", title: "Settings — values & forms", contexts: page });
+    browser.menus.create({ id: "ef-settings", parentId: "ef-root", title: "Settings - values & forms", contexts: page });
   }
 
   browser.menus.onClicked.addListener(async (info, tab) => {
@@ -180,7 +177,7 @@
       data.forms.push(form);
     }
     await browser.storage.local.set({ [KEYS.FORMS]: data.forms });
-    pageToast(tab.id, `EasyFill: ${existing ? "updated" : "saved"} “${preview(form.name, 36)}” — ${fields.length} fields.`);
+    pageToast(tab.id, `EasyFill: ${existing ? "updated" : "saved"} "${preview(form.name, 36)}" - ${fields.length} fields.`);
     return { ok: true, form };
   }
 
@@ -196,7 +193,7 @@
     await browser.tabs.sendMessage(tabId, { type: "ef-fill", requestId, fields, relaxed: false }).catch(() => { });
     await sleep(450);
 
-    // Pass 2: anything left (moved iframes, about:blank…) — try everywhere.
+    // Pass 2: anything left (moved iframes, about:blank...) - try everywhere.
     if (st.remaining.size) {
       const rest = fields.filter((f) => st.remaining.has(f.index));
       await browser.tabs.sendMessage(tabId, { type: "ef-fill", requestId, fields: rest, relaxed: true }).catch(() => { });

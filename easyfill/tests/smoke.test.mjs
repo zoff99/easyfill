@@ -1,5 +1,5 @@
 /*
- * EasyFill — smoke tests for the capture/fill engine (no browser needed).
+ * EasyFill - smoke tests for the capture/fill engine (no browser needed).
  * Run:  npm install linkedom   (anywhere node can resolve it)
  *       node tests/smoke.test.mjs
  *
@@ -11,10 +11,17 @@ let parseHTML;
 try {
   ({ parseHTML } = await import("linkedom"));
 } catch {
-  // sandbox fallback: deps installed next to the workspace
+  // sandbox fallback: point EF_TOOLS at a dir whose node_modules has linkedom
   const { createRequire } = await import("node:module");
-  const req = createRequire("/home/user/easyfill-tests/package.json");
-  ({ parseHTML } = req("linkedom"));
+  const candidates = [
+    process.env.EF_TOOLS,
+    "/tmp/ef-tools/package.json",
+    "/home/user/easyfill-tests/package.json"
+  ].filter(Boolean);
+  for (const c of candidates) {
+    try { ({ parseHTML } = createRequire(c)("linkedom")); break; } catch { /* next */ }
+  }
+  if (!parseHTML) throw new Error("linkedom not found - run: npm install linkedom");
 }
 
 await import(pathToFileURL(new URL("../src/shared.js", import.meta.url).pathname));
@@ -25,8 +32,8 @@ const C = NS.content;
 
 let passed = 0, failed = 0;
 function check(name, cond) {
-  if (cond) { passed++; console.log("  ✓ " + name); }
-  else { failed++; console.error("  ✗ FAIL: " + name); }
+  if (cond) { passed++; console.log("  ok   " + name); }
+  else { failed++; console.error("  FAIL " + name); }
 }
 
 const dom = parseHTML(`<!DOCTYPE html><html><body>
@@ -64,14 +71,14 @@ for (const k of ["document", "HTMLInputElement", "HTMLTextAreaElement", "HTMLSel
 globalThis.window = dom.window ?? dom;
 const document = dom.document;
 
-console.log("\n— shared helpers —");
+console.log("\n- shared helpers -");
 check("truthy strings", NS.truthy("TRUE") && NS.truthy("1") && NS.truthy("on") && !NS.truthy("false") && !NS.truthy(""));
 check("normalizeUrl strips query/hash", NS.normalizeUrl("https://a.com/p?x=1#y") === "https://a.com/p");
 check("sameHost subdomains", NS.sameHost("https://www.a.com/x", "https://a.com/y") && !NS.sameHost("https://a.com", "https://b.com"));
-check("preview collapses + caps", NS.preview("a\n  b   c", 4) === "a b…");
+check("preview collapses + caps", NS.preview("a\n  b   c", 4) === "a b...");
 check("menuTitle escapes &", NS.menuTitle("Tom & Jerry") === "Tom && Jerry");
 
-console.log("\n— capture —");
+console.log("\n- capture -");
 const fields = C.captureFields(document, { includePasswords: false });
 const byName = (n) => fields.find((f) => f.fp.name === n);
 check("password skipped by default", !byName("secret"));
@@ -90,7 +97,7 @@ check("richtext captured", fields.some((f) => f.kind === "richtext" && /Rich/.te
 check("label resolved", byName("fullname")?.label === "Full name");
 check("password included when enabled", C.captureFields(document, { includePasswords: true }).some((f) => f.fp.name === "secret"));
 
-console.log("\n— selectors resolve back to the same elements —");
+console.log("\n- selectors resolve back to the same elements -");
 let allResolve = true;
 for (const f of fields) {
   const el = document.querySelector(f.selector);
@@ -99,7 +106,7 @@ for (const f of fields) {
 check("every captured selector resolves", allResolve);
 check("radio selector targets checked member", document.querySelector(radio.selector)?.value === "blue");
 
-console.log("\n— fill round-trip (values changed, then restored) —");
+console.log("\n- fill round-trip (values changed, then restored) -");
 const set = (n, v) => { document.querySelector(`[name="${n}"]`).value = v; };
 set("fullname", "CHANGED"); set("bio", "CHANGED"); set("age", "99");
 for (const o of document.querySelector('[name="plan"]').options) o.selected = o.value === "s";
@@ -123,7 +130,7 @@ check("checkbox restored", document.querySelector('[name="tos"]').checked === tr
 check("radio restored", document.querySelector('input[name="color"][value="blue"]').checked === true);
 check("richtext restored", /Rich/.test(document.getElementById("editor").textContent));
 
-console.log("\n— framework value-tracker bypass (React-style) —");
+console.log("\n- framework value-tracker bypass (React-style) -");
 {
   const el = document.querySelector('[name="email"]');
   const desc = Object.getOwnPropertyDescriptor(dom.HTMLInputElement.prototype, "value");
@@ -131,14 +138,14 @@ console.log("\n— framework value-tracker bypass (React-style) —");
   Object.defineProperty(el, "value", {
     configurable: true,
     get() { return desc.get.call(el); },
-    set(v) { trackerSaw = v; } // intercepts naive el.value = … assignments
+    set(v) { trackerSaw = v; } // intercepts naive el.value = ... assignments
   });
   const ok = C.applyValue(el, "text", "new@example.com");
   check("native setter bypasses instance tracker", ok && el.value === "new@example.com" && trackerSaw === null);
   delete el.value;
 }
 
-console.log("\n— flexible matching —");
+console.log("\n- flexible matching -");
 {
   const sel = document.querySelector('[name="plan"]');
   check("select by visible text", C.applyValue(sel, "select", "Team") && sel.options[2].selected === true);
@@ -148,7 +155,7 @@ console.log("\n— flexible matching —");
   check("radio re-targets by value", C.applyValue(r, "radio", "green") && document.querySelector('input[name="color"][value="green"]').checked === true);
 }
 
-console.log("\n— fingerprint fallback after DOM mutation —");
+console.log("\n- fingerprint fallback after DOM mutation -");
 {
   const city = document.querySelector('input[aria-label="City"]');
   const f = C.captureFields(document, {}).find((x) => x.fp.label === "City");

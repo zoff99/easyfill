@@ -1,7 +1,5 @@
 /*
- * EasyFill — shared helpers
- * Part of EasyFill, an open-source (MIT) one-click form filler for Firefox.
- * Original code — not derived from SimpleFill or any other extension.
+ * EasyFill - shared helpers
  *
  * Loaded as a classic script in the background page, content scripts,
  * popup and options page. Everything hangs off globalThis.EasyFill.
@@ -36,7 +34,7 @@
     v === true ||
     ["true", "1", "yes", "on", "checked", "y"].includes(String(v ?? "").trim().toLowerCase());
 
-  // origin + pathname, no query/fragment — stable identity for a page.
+  // origin + pathname, no query/fragment - stable identity for a page.
   NS.normalizeUrl = (u) => {
     try { const x = new URL(u); return x.origin + x.pathname; }
     catch (_) { return String(u ?? ""); }
@@ -65,10 +63,10 @@
   // One-line, length-capped preview for menus and lists.
   NS.preview = (s, n = 60) => {
     s = String(s ?? "").replace(/\s+/g, " ").trim();
-    return s.length > n ? s.slice(0, n - 1) + "…" : s;
+    return s.length > n ? s.slice(0, n).trimEnd() + "..." : s;
   };
 
-  // "&" is the access-key marker in Firefox menu titles — escape it.
+  // "&" is the access-key marker in Firefox menu titles - escape it.
   NS.menuTitle = (s) => String(s ?? "").replace(/&/g, "&&");
 
   NS.sleep = (ms) => new Promise((r) => setTimeout(r, ms));

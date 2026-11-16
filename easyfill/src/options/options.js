@@ -1,4 +1,3 @@
-/* EasyFill settings logic — original code, MIT */
 (() => {
   "use strict";
   const NS = globalThis.EasyFill;
@@ -22,7 +21,7 @@
   let saveTimer = null;
   function markDirty(key) {
     dirty.add(key);
-    $("saveState").textContent = "Saving…";
+    $("saveState").textContent = "Saving...";
     clearTimeout(saveTimer);
     saveTimer = setTimeout(async () => {
       const payload = {};
@@ -30,8 +29,8 @@
       dirty.clear();
       try {
         await browser.storage.local.set(payload);
-        $("saveState").textContent = "Saved ✓";
-        setTimeout(() => { if ($("saveState").textContent === "Saved ✓") $("saveState").textContent = ""; }, 1600);
+        $("saveState").textContent = "Saved";
+        setTimeout(() => { if ($("saveState").textContent === "Saved") $("saveState").textContent = ""; }, 1600);
       } catch (e) {
         $("saveState").textContent = "Save failed";
         console.error(e);
@@ -44,7 +43,7 @@
     t.style.height = Math.min(t.scrollHeight + 2, 260) + "px";
   }
 
-  /* ---------------- values (short name → value), unlimited ---------------- */
+  /* ---------------- values (short name -> value), unlimited ---------------- */
 
   function renderValues() {
     const list = $("valuesList");
@@ -53,7 +52,7 @@
     const shown = state.values.filter((v) =>
       !q || (v.name || "").toLowerCase().includes(q) || String(v.value || "").toLowerCase().includes(q));
     $("valueCount").textContent =
-      state.values.length + (q ? ` (${shown.length} shown)` : "") + " — no limits";
+      state.values.length + (q ? ` (${shown.length} shown)` : "") + " - no limits";
     for (const v of shown) {
       const row = el("div", "vrow");
       const name = document.createElement("input");
@@ -64,11 +63,11 @@
 
       const val = document.createElement("textarea");
       val.rows = 1;
-      val.placeholder = "Value — the text inserted into the field";
+      val.placeholder = "Value - the text inserted into the field";
       val.value = String(v.value ?? "");
       val.addEventListener("input", () => { v.value = val.value; grow(val); markDirty(KEYS.VALUES); });
 
-      const del = el("button", "icon danger", "✕");
+      const del = el("button", "icon danger", "x");
       del.title = "Delete value";
       del.addEventListener("click", () => {
         state.values = state.values.filter((x) => x.id !== v.id);
@@ -81,7 +80,7 @@
       grow(val);
     }
     if (!shown.length) {
-      list.appendChild(el("p", "hint", q ? "No values match the filter." : "No values yet — add your first one above."));
+      list.appendChild(el("p", "hint", q ? "No values match the filter." : "No values yet - add your first one above."));
     }
   }
 
@@ -152,7 +151,7 @@
       name.placeholder = "Form name";
       name.addEventListener("input", () => { f.name = name.value; f.updatedAt = Date.now(); markDirty(KEYS.FORMS); });
 
-      const toggle = el("button", "icon", expanded.has(f.id) ? "▾ Fields" : "▸ Fields");
+      const toggle = el("button", "icon", expanded.has(f.id) ? "- Fields" : "+ Fields");
       toggle.addEventListener("click", () => {
         if (expanded.has(f.id)) expanded.delete(f.id); else expanded.add(f.id);
         renderForms();
@@ -160,7 +159,7 @@
 
       const del = el("button", "icon danger", "Delete");
       del.addEventListener("click", () => {
-        if (!confirm(`Delete saved form “${f.name}”?`)) return;
+        if (!confirm(`Delete saved form "${f.name}"?`)) return;
         state.forms = state.forms.filter((x) => x.id !== f.id);
         expanded.delete(f.id);
         markDirty(KEYS.FORMS);
@@ -170,7 +169,7 @@
       head.append(name, toggle, del);
       card.appendChild(head);
       card.appendChild(el("div", "fmeta",
-        `${(f.fields || []).length} fields · ${f.host || "page"} · ${f.urlPattern || ""}`));
+        `${(f.fields || []).length} fields | ${f.host || "page"} | ${f.urlPattern || ""}`));
 
       if (expanded.has(f.id)) {
         const fields = el("div", "fields");
@@ -181,7 +180,7 @@
           lab.append(document.createTextNode(preview(field.label || field.fp?.name || field.selector || "field", 34)));
           lab.appendChild(el("span", "kind", field.kind));
           const ed = fieldEditor(field);
-          const rm = el("button", "icon danger", "✕");
+          const rm = el("button", "icon danger", "x");
           rm.title = "Remove this field from the saved form";
           rm.addEventListener("click", () => {
             f.fields.splice(i, 1);

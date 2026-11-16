@@ -1,7 +1,5 @@
 /*
- * EasyFill — content script
- * Part of EasyFill, an open-source (MIT) one-click form filler for Firefox.
- * Original code — not derived from SimpleFill or any other extension.
+ * EasyFill - content script
  *
  * Runs in every frame. Responsibilities:
  *   - capture: scan a form/page and record field selectors + current values
@@ -97,7 +95,7 @@
       try { return el.checkVisibility({ visibilityProperty: true }); } catch (_) { /* fall through */ }
     }
     if (typeof el.getClientRects === "function") return el.getClientRects().length > 0;
-    return true; // no layout engine (unit tests) — assume visible
+    return true; // no layout engine (unit tests) - assume visible
   }
 
   /* ------------------------------------------------------------------ *
@@ -111,7 +109,7 @@
 
   // Ids that look machine-generated are unstable across page loads.
   const GENERATED_ID =
-    /^[:«]|^(radix[-_:]|headlessui-|ember\d|ext-gen|yui_|react-select|mui-\d)|^\d+$|[0-9a-f]{8}-[0-9a-f]{4}-|\d{6,}/i;
+    /^[:\u00AB]|^(radix[-_:]|headlessui-|ember\d|ext-gen|yui_|react-select|mui-\d)|^\d+$|[0-9a-f]{8}-[0-9a-f]{4}-|\d{6,}/i;
 
   // checked state, with an attribute fallback for DOMs without the property
   const isChecked = (el) =>
@@ -309,7 +307,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * Value injection — framework-safe (React / Vue / Angular)
+   * Value injection - framework-safe (React / Vue / Angular)
    * ------------------------------------------------------------------ */
 
   // Use the prototype's native setter so framework value-trackers
@@ -361,7 +359,7 @@
         return isChecked(target);
       }
       case "select": {
-        // Select via option.selected — the DOM-native way, works with
+        // Select via option.selected - the DOM-native way, works with
         // framework change handlers and DOMs lacking a value setter.
         const want = String(value ?? "");
         const opts = Array.from(el.options || []);
@@ -407,7 +405,7 @@
         const now = String(el.innerText ?? el.textContent ?? "").trim();
         return now === text.trim() || text === "";
       }
-      default: { // text, password, textarea, number, date, time, color, range…
+      default: { // text, password, textarea, number, date, time, color, range...
         const want = String(value ?? "");
         nativeSet(el, "value", want);
         fire(el, want);
@@ -448,7 +446,7 @@
     }
   });
 
-  let contextTarget = null; // last right-clicked element (composedPath → shadow-aware)
+  let contextTarget = null; // last right-clicked element (composedPath -> shadow-aware)
   let lastFocused = null;
   document.addEventListener("contextmenu", (e) => {
     contextTarget = (e.composedPath && e.composedPath()[0]) || e.target;
@@ -468,7 +466,7 @@
     try { return browser.menus.getTargetElement(id) || null; } catch (_) { return null; }
   }
 
-  // Right-click may land on a wrapper/label — find the real field.
+  // Right-click may land on a wrapper/label - find the real field.
   function resolveEditableFrom(el) {
     if (!el || el.nodeType !== 1) return null;
     const k = kindOf(el);
