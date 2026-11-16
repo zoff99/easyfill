@@ -1,0 +1,122 @@
+# EasyFill — One-Click Form Filler
+
+**Save form answers once, fill every field in one click.** A small, fast, fully
+local Firefox extension. Open source (MIT), no account, no limits, no network
+calls — ever.
+
+EasyFill is an independent, from-scratch reimplementation of the *form-filling*
+part of SimpleFill ("simple" → "easy" — same meaning, different project).
+It is **not affiliated with SimpleFill or Softal Ltd**, and contains no code,
+assets, or fonts from that extension. Where SimpleFill's free plan caps you at
+**5** saved values/forms, EasyFill has **no limits at all**.
+
+---
+
+## Features
+
+- **One-click form fill** — fill out a form once, click *Save this form*, and
+  next time every field is filled in one click: text inputs, email/tel/url,
+  number, date/time, textareas, dropdowns (single & multi), checkboxes, radio
+  groups, and rich-text (`contenteditable`) editors like Gmail's compose box.
+- **Unlimited values** — in Settings, add as many **short name → value** pairs
+  as you like. Right-click any form field → **EasyFill → Insert value** → pick
+  one. Works on every site.
+- **Right-click menu everywhere** — *Insert value*, *Fill form*, *Save this
+  form*, and *Settings*, directly in the browser's context menu.
+- **Toolbar popup** — save the current form, see saved forms for the current
+  site first, fill with one click.
+- **Solid field matching** — fields are remembered by stable `name`/`id`
+  selectors with an `nth-of-type` path fallback, plus label/placeholder
+  *fingerprints* so fills survive small site changes. Machine-generated ids
+  (React/Radix/Headless UI…) are ignored.
+- **Framework-safe injection** — values are set through the native prototype
+  setters and real `input`/`change` events, so React, Vue, Angular, and
+  jQuery-era validators all notice the change.
+- **Works in frames & shadow DOM** — captures and fills across iframes and
+  open shadow roots.
+- **Local-only & private** — everything lives in `browser.storage.local`.
+  The extension makes **zero network requests**. Password fields are excluded
+  from saving unless you explicitly opt in.
+- **Backup** — export/import everything as JSON.
+
+## Install
+
+### Temporary (development / quick try)
+1. Open Firefox → address bar → `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on…**
+3. Select `easyfill/manifest.json` (or the packaged `easyfill-1.0.0.xpi`).
+
+Temporary add-ons stay until you restart Firefox.
+
+### Permanent
+Firefox requires signed add-ons for permanent install. Either:
+- submit the zip to [addons.mozilla.org](https://addons.mozilla.org) as
+  **unlisted** ("On your own") — you get a signed `.xpi` back in minutes, free; or
+- use Firefox Developer Edition / Nightly / ESR with
+  `xpinstall.signatures.required = false` in `about:config`.
+
+> **Why Manifest V2?** Firefox fully supports MV2 (Mozilla has no deprecation
+> planned), and MV2 grants host access at install time. Firefox MV3 makes host
+> permissions opt-in *after* install, which would silently break "works on
+> every site" until the user grants access. The original SimpleFill is MV2 too.
+
+## Use
+
+1. **Save a form:** fill a form normally, then click the EasyFill toolbar
+   button → **Save this form** (or right-click → EasyFill → Save this form).
+2. **Fill it:** next visit, right-click → **EasyFill → Fill form → …**, or use
+   the popup's **Fill** button. A toast reports `filled N/M fields`.
+3. **Per-field values:** Settings → add *short name* + *value* pairs (no cap).
+   Right-click any input → **EasyFill → Insert value → …**.
+4. **Edit saved answers:** Settings → Saved forms → ▸ Fields — rename forms,
+   edit or remove individual saved answers.
+
+## How it works
+
+| Piece | File | Role |
+|---|---|---|
+| Shared helpers | `src/shared.js` | storage keys, ids, URL matching, previews |
+| Content script | `src/content.js` | field scan/capture, selectors + fingerprints, value injection, right-click target tracking, toasts |
+| Background page | `src/background.js` | context menus, cross-frame capture/fill orchestration, first-run seed |
+| Popup | `src/popup/*` | save / fill UI for the current tab |
+| Settings | `src/options/*` | unlimited values editor, saved-form manager, options, backup |
+
+**Capture** walks the page (including open shadow roots), skips
+hidden/file/submit/disabled/invisible fields, groups radios by name+form, and
+stores per field: `kind`, `value`, a stable CSS `selector`, a human `label`,
+and a fingerprint (`name`, `id`, `label`, `placeholder`, `type`).
+
+**Fill** resolves each selector in every frame/root; if the DOM changed, it
+falls back to unique fingerprint matches. Values are applied with the native
+`HTMLInputElement/HTMLTextAreaElement` prototype setters (bypassing React's
+value tracker), `option.selected` for dropdowns, `.click()` + native `checked`
+setter for checkboxes/radios, and `execCommand("insertText")` for rich text —
+always followed by bubbling `input` + `change` events.
+
+**Cross-frame:** the background broadcasts to all frames, collects results for
+a short window, then retries unresolved fields in a relaxed second pass.
+
+## Limitations (honest list)
+
+- `input[type=file]` cannot be set by any web extension (browser security).
+- Closed shadow roots and canvas-based editors are unreachable.
+- Sites that require `isTrusted` events for every keystroke may ignore
+  synthetic events (rare; most frameworks don't).
+- Firefox blocks extensions on `addons.mozilla.org` and other privileged pages.
+- Saved passwords (opt-in) are stored unencrypted in the browser profile.
+
+## Development
+
+```bash
+node --check src/shared.js src/content.js src/background.js   # syntax
+npm install linkedom                 # tiny DOM for tests
+node tests/smoke.test.mjs            # 35 assertions over the real engine code
+```
+
+Package: zip the extension root (manifest at zip root), excluding `tests/`.
+
+## License
+
+MIT — see `LICENSE`. Original code © 2026 EasyFill contributors.
+*EasyFill is an independent project; "SimpleFill" is a trademark of its
+respective owner and is used here only to describe compatibility of purpose.*
