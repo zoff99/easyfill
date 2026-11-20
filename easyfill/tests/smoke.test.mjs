@@ -6,6 +6,7 @@
  * Exercises the exact code shipped in src/content.js and src/shared.js.
  */
 import { pathToFileURL } from "node:url";
+import { readFileSync } from "node:fs";
 
 let parseHTML;
 try {
@@ -182,6 +183,18 @@ console.log("\n- reorder helpers -");
   check("drag onto self is no-op", NS.reorderItem(arr, "b", "b", true) === arr);
   check("unknown ids are no-ops", NS.reorderItem(arr, "zz", "a", true) === arr && NS.moveItem(arr, "zz", 1) === arr);
   check("original array untouched", ids(arr) === "abc");
+}
+
+console.log("\n- menu titles -");
+{
+  // Firefox treats a single "&" in a menu title as an access-key marker
+  // (it eats the "&" and underlines the next char). Static titles must
+  // contain none; dynamic ones go through menuTitle() which doubles it.
+  const src = readFileSync(new URL("../src/background.js", import.meta.url), "utf-8");
+  const titles = [...src.matchAll(/title:\s*"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]);
+  check("static menu titles found", titles.length >= 6);
+  check("no raw access-key & in static menu titles",
+    titles.every((t) => !/(^|[^&])&([^&]|$)/.test(t)));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

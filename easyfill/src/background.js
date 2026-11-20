@@ -69,7 +69,7 @@
 
     browser.menus.create({ id: "ef-save", parentId: "ef-root", title: "Save this form", contexts: page });
     browser.menus.create({ id: "ef-sep2", parentId: "ef-root", type: "separator", contexts: page });
-    browser.menus.create({ id: "ef-settings", parentId: "ef-root", title: "Settings - values & forms", contexts: page });
+    browser.menus.create({ id: "ef-settings", parentId: "ef-root", title: "Settings - values and forms", contexts: page });
   }
 
   browser.menus.onClicked.addListener(async (info, tab) => {

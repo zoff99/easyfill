@@ -118,7 +118,7 @@ a short window, then retries unresolved fields in a relaxed second pass.
 ```bash
 node --check src/shared.js src/content.js src/background.js   # syntax
 npm install linkedom                 # tiny DOM for tests
-node tests/smoke.test.mjs            # 44 assertions over the real engine code
+node tests/smoke.test.mjs            # 46 assertions over the real engine code
 ```
 
 Package: zip the extension root (manifest at zip root), excluding `tests/`.
