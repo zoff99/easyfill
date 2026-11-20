@@ -31,13 +31,15 @@
     <section class="card">
       <div class="card-head">
         <h2>Values <span class="count" id="valueCount"></span></h2>
-        <p>Right-click any form field and pick a value under <strong>EasyFill</strong>. No limits - add as many as you like.</p>
+        <p>Right-click any form field and pick a value under <strong>EasyFill</strong>. No limits - add as many as you like.
+        Drag the grip, or use the up/down buttons, to reorder; the order matches the right-click menu.
+        Reordering is paused while the filter is active.</p>
       </div>
       <div class="toolbar">
         <input id="filter" type="search" placeholder="Filter values..." autocomplete="off">
         <button id="addValue" class="primary">+ Add value</button>
       </div>
-      <div class="vrow vhead"><span>Short name</span><span>Value</span><span></span></div>
+      <div class="vrow vhead"><span></span><span>Short name</span><span>Value</span><span>Move</span><span></span></div>
       <div id="valuesList"></div>
     </section>
 

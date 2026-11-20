@@ -41,10 +41,9 @@
       });
     } else {
       for (const v of data.values) {
-        const p = preview(v.value, 42);
         browser.menus.create({
           id: "ef-value:" + v.id, parentId: "ef-root", contexts: ["editable"],
-          title: menuTitle(preview(v.name, 28) + (p ? " - " + p : ""))
+          title: menuTitle(preview(v.name, 30) || "(unnamed)")
         });
       }
     }

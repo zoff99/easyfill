@@ -169,5 +169,20 @@ console.log("\n- fingerprint fallback after DOM mutation -");
   check("fill still works", C.applyValue(found, "text", "Munich") && city.value === "Munich");
 }
 
+console.log("\n- reorder helpers -");
+{
+  const arr = [{ id: "a" }, { id: "b" }, { id: "c" }];
+  const ids = (a) => a.map((x) => x.id).join("");
+  check("move down", ids(NS.moveItem(arr, "a", 1)) === "bac");
+  check("move up", ids(NS.moveItem(arr, "c", -1)) === "acb");
+  check("move up at top is no-op", NS.moveItem(arr, "a", -1) === arr);
+  check("move down at bottom is no-op", NS.moveItem(arr, "c", 1) === arr);
+  check("drag before target", ids(NS.reorderItem(arr, "c", "a", true)) === "cab");
+  check("drag after target", ids(NS.reorderItem(arr, "a", "c", false)) === "bca");
+  check("drag onto self is no-op", NS.reorderItem(arr, "b", "b", true) === arr);
+  check("unknown ids are no-ops", NS.reorderItem(arr, "zz", "a", true) === arr && NS.moveItem(arr, "zz", 1) === arr);
+  check("original array untouched", ids(arr) === "abc");
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

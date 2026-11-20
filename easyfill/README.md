@@ -14,7 +14,9 @@ calls - ever.
   groups, and rich-text (`contenteditable`) editors like Gmail's compose box.
 - **Unlimited values** - in Settings, add as many **short name -> value** pairs
   as you like. Right-click any form field, open **EasyFill**, and pick a value
-  from the list - one menu level, no submenu.
+  from the list - one menu level, no submenu. Reorder entries by dragging the
+  grip or with the up/down buttons (keyboard friendly); the order is saved and
+  matches the right-click menu.
 - **Right-click menu everywhere** - your values, *Fill form*, *Save this form*
   and *Settings*, directly in the browser's context menu.
 - **Toolbar popup** - save the current form, see saved forms for the current
@@ -69,6 +71,9 @@ Firefox requires signed add-ons for permanent install. Either:
    inserted into exactly the field you right-clicked.
 4. **Edit saved answers:** Settings -> Saved forms -> "+ Fields" - rename
    forms, edit or remove individual saved answers.
+5. **Reorder values:** Settings -> drag a row by its grip, or focus its up/down
+   button and press Enter/Space repeatedly. Reordering is paused while the
+   filter box is non-empty.
 
 ## How it works
 
@@ -113,7 +118,7 @@ a short window, then retries unresolved fields in a relaxed second pass.
 ```bash
 node --check src/shared.js src/content.js src/background.js   # syntax
 npm install linkedom                 # tiny DOM for tests
-node tests/smoke.test.mjs            # 35 assertions over the real engine code
+node tests/smoke.test.mjs            # 44 assertions over the real engine code
 ```
 
 Package: zip the extension root (manifest at zip root), excluding `tests/`.

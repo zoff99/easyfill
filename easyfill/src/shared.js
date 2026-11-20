@@ -70,4 +70,26 @@
   NS.menuTitle = (s) => String(s ?? "").replace(/&/g, "&&");
 
   NS.sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // Reorder helpers (pure, return a new array; same array if the move is a no-op).
+  NS.moveItem = (arr, id, dir) => {
+    const i = arr.findIndex((x) => x.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= arr.length) return arr;
+    const out = arr.slice();
+    const [item] = out.splice(i, 1);
+    out.splice(j, 0, item);
+    return out;
+  };
+
+  NS.reorderItem = (arr, dragId, targetId, before) => {
+    if (dragId === targetId) return arr;
+    if (arr.findIndex((x) => x.id === dragId) < 0) return arr;
+    if (!arr.some((x) => x.id === targetId)) return arr;
+    const out = arr.slice();
+    const [item] = out.splice(out.findIndex((x) => x.id === dragId), 1);
+    const to = out.findIndex((x) => x.id === targetId);
+    out.splice(before ? to : to + 1, 0, item);
+    return out;
+  };
 })();

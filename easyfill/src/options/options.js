@@ -6,6 +6,8 @@
 
   let state = { values: [], forms: [], settings: { ...NS.DEFAULT_SETTINGS } };
   let filter = "";
+  let dragId = null;      // id of the row being dragged
+  let dropTarget = null;  // { id, before } under the pointer
   const expanded = new Set(); // expanded form ids
 
   function el(tag, cls, text) {
@@ -55,6 +57,26 @@
       state.values.length + (q ? ` (${shown.length} shown)` : "") + " - no limits";
     for (const v of shown) {
       const row = el("div", "vrow");
+      row.dataset.id = v.id;
+
+      const grip = el("div", "grip");
+      grip.draggable = !q;
+      grip.title = q ? "Clear the filter to reorder" : "Drag to reorder";
+      if (!q) {
+        grip.addEventListener("dragstart", (e) => {
+          dragId = v.id;
+          e.dataTransfer.setData("text/plain", v.id);
+          e.dataTransfer.effectAllowed = "move";
+          try { e.dataTransfer.setDragImage(row, 24, 12); } catch (_) { }
+          row.classList.add("dragging");
+        });
+        grip.addEventListener("dragend", () => {
+          dragId = null;
+          clearDrop();
+          row.classList.remove("dragging");
+        });
+      }
+
       const name = document.createElement("input");
       name.type = "text";
       name.placeholder = "Short name";
@@ -67,6 +89,22 @@
       val.value = String(v.value ?? "");
       val.addEventListener("input", () => { v.value = val.value; grow(val); markDirty(KEYS.VALUES); });
 
+      // Keyboard/mouse-free reordering: plain buttons, focus kept on the
+      // moved row so repeated presses keep working.
+      const move = el("div", "move");
+      const idx = state.values.findIndex((x) => x.id === v.id);
+      const up = el("button", "icon", "^");
+      up.title = q ? "Clear the filter to reorder" : "Move up";
+      up.setAttribute("aria-label", "Move " + (v.name || "value") + " up");
+      up.disabled = !!q || idx === 0;
+      up.addEventListener("click", () => moveValue(v.id, -1, 0));
+      const down = el("button", "icon", "v");
+      down.title = q ? "Clear the filter to reorder" : "Move down";
+      down.setAttribute("aria-label", "Move " + (v.name || "value") + " down");
+      down.disabled = !!q || idx === state.values.length - 1;
+      down.addEventListener("click", () => moveValue(v.id, 1, 1));
+      move.append(up, down);
+
       const del = el("button", "icon danger", "x");
       del.title = "Delete value";
       del.addEventListener("click", () => {
@@ -75,7 +113,7 @@
         renderValues();
       });
 
-      row.append(name, val, del);
+      row.append(grip, name, val, move, del);
       list.appendChild(row);
       grow(val);
     }
@@ -83,6 +121,52 @@
       list.appendChild(el("p", "hint", q ? "No values match the filter." : "No values yet - add your first one above."));
     }
   }
+
+  function moveValue(id, dir, which) {
+    const next = NS.moveItem(state.values, id, dir);
+    if (next === state.values) return;
+    state.values = next;
+    markDirty(KEYS.VALUES);
+    renderValues();
+    const btns = $("valuesList").querySelectorAll(`.vrow[data-id="${CSS.escape(id)}"] .move button`);
+    const btn = btns[which];
+    if (btn) (btn.disabled ? btns[1 - which] : btn).focus();
+  }
+
+  function clearDrop() {
+    dropTarget = null;
+    for (const r of $("valuesList").querySelectorAll(".drop-above, .drop-below")) {
+      r.classList.remove("drop-above", "drop-below");
+    }
+  }
+
+  const valuesList = $("valuesList");
+  valuesList.addEventListener("dragover", (e) => {
+    if (!dragId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const row = e.target.closest && e.target.closest(".vrow");
+    clearDrop();
+    if (!row || row.dataset.id === dragId) return;
+    const r = row.getBoundingClientRect();
+    const before = (e.clientY - r.top) < r.height / 2;
+    row.classList.add(before ? "drop-above" : "drop-below");
+    dropTarget = { id: row.dataset.id, before };
+  });
+  valuesList.addEventListener("drop", (e) => {
+    if (!dragId || !dropTarget) return;
+    e.preventDefault();
+    const next = NS.reorderItem(state.values, dragId, dropTarget.id, dropTarget.before);
+    dragId = null;
+    clearDrop();
+    if (next === state.values) return;
+    state.values = next;
+    markDirty(KEYS.VALUES);
+    renderValues();
+  });
+  valuesList.addEventListener("dragleave", (e) => {
+    if (!valuesList.contains(e.relatedTarget)) clearDrop();
+  });
 
   $("addValue").addEventListener("click", () => {
     const v = { id: uid(), name: "", value: "", createdAt: Date.now() };
