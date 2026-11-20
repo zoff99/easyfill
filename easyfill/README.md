@@ -1,5 +1,20 @@
 # EasyFill - One-Click Form Filler
 
+Almost 100% of this extension was written by AI. The code was produced by an AI
+assistant from plain-language instructions; a human set the requirements,
+tested the builds in a real Firefox browser and decided what shipped. Commits
+made that way are marked [AIassisted].
+
+This is stated so you know it up front, not as a warning. Everything is here to
+read and audit: plain JavaScript with no build step, no minification and no
+dependencies; no internet access of any kind (zero network requests, and the
+manifest declares that no data is collected); nothing you type or save ever
+leaves your browser; and the repo ships unit tests over the shipped engine
+code, a source audit script (`tools/audit.sh`) that verifies no external
+CSS/JS/HTML/fonts are loaded and that no network APIs, endpoints or
+exfiltration paths exist, and a scan for hidden characters in the source (the
+codebase is plain ASCII).
+
 **Save form answers once, fill every field in one click.** A small, fast, fully
 local Firefox extension. Open source (MIT), no account, no limits, no network
 calls - ever.
@@ -119,9 +134,11 @@ a short window, then retries unresolved fields in a relaxed second pass.
 node --check src/shared.js src/content.js src/background.js   # syntax
 npm install linkedom                 # tiny DOM for tests
 node tests/smoke.test.mjs            # 46 assertions over the real engine code
+bash tools/audit.sh                  # safety audit: no external loads, no network, ASCII-only
 ```
 
-Package: zip the extension root (manifest at zip root), excluding `tests/`.
+Package: zip the extension root (manifest at zip root), excluding `tests/`
+and `tools/`.
 
 ## License
 
