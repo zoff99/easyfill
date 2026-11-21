@@ -197,5 +197,14 @@ console.log("\n- menu titles -");
     titles.every((t) => !/(^|[^&])&([^&]|$)/.test(t)));
 }
 
+console.log("\n- privacy: toasts show keys, not values -");
+{
+  const content = readFileSync(new URL("../src/content.js", import.meta.url), "utf-8");
+  const bg = readFileSync(new URL("../src/background.js", import.meta.url), "utf-8");
+  check("insert toast labels with the key (msg.name)", /"Filled: " \+ label/.test(content) && /NS\.preview\(msg\.name, 30\)/.test(content));
+  check("no toast ever previews the inserted value", !/preview\(msg\.value/.test(content));
+  check("background sends the key with the value", /"ef-insert-value", name: v\.name, value: v\.value/.test(bg));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -49,7 +49,8 @@ calls - ever.
   The extension makes **zero network requests** and declares
   `data_collection_permissions: { required: ["none"] }` - it collects
   and transmits no personal data at all. Password fields are excluded from
-  saving unless you explicitly opt in. (This manifest key requires
+  saving unless you explicitly opt in. Feedback toasts show only a value's
+  short name, never its content. (This manifest key requires
   Firefox 142 or newer, which is therefore the minimum supported version.)
 - **Backup** - export/import everything as JSON.
 - **Plain ASCII source** - no decorative unicode anywhere in the codebase.
@@ -133,7 +134,7 @@ a short window, then retries unresolved fields in a relaxed second pass.
 ```bash
 node --check src/shared.js src/content.js src/background.js   # syntax
 npm install linkedom                 # tiny DOM for tests
-node tests/smoke.test.mjs            # 46 assertions over the real engine code
+node tests/smoke.test.mjs            # 49 assertions over the real engine code
 bash tools/audit.sh                  # safety audit: no external loads, no network, ASCII-only
 ```
 

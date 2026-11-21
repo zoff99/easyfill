@@ -562,7 +562,9 @@
       if (!el) { toast("Right-click a form field to insert a value.", "err"); return Promise.resolve({ ok: false }); }
       const ok = applyValue(el, kindOf(el), msg.value);
       flash(el);
-      toast(ok ? "Filled: " + NS.preview(msg.value, 48) : "Could not fill that field.", ok ? "ok" : "err");
+      // Privacy: never show the inserted value itself - only its short name.
+      const label = NS.preview(msg.name, 30) || "(unnamed)";
+      toast(ok ? "Filled: " + label : "Could not fill that field.", ok ? "ok" : "err");
       return Promise.resolve({ ok });
     }
 
