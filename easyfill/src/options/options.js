@@ -89,6 +89,16 @@
       val.value = String(v.value ?? "");
       val.addEventListener("input", () => { v.value = val.value; grow(val); markDirty(KEYS.VALUES); });
 
+      // Sensitive flag: inserting this value will ask for confirmation first.
+      const sens = el("label", "sens");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!v.sensitive;
+      cb.title = "Sensitive: ask for confirmation before inserting this value";
+      cb.setAttribute("aria-label", (v.name || "value") + " is sensitive");
+      cb.addEventListener("change", () => { v.sensitive = cb.checked; markDirty(KEYS.VALUES); });
+      sens.appendChild(cb);
+
       // Keyboard/mouse-free reordering: plain buttons, focus kept on the
       // moved row so repeated presses keep working.
       const move = el("div", "move");
@@ -113,7 +123,7 @@
         renderValues();
       });
 
-      row.append(grip, name, val, move, del);
+      row.append(grip, name, val, sens, move, del);
       list.appendChild(row);
       grow(val);
     }
@@ -308,7 +318,8 @@
       if (!Array.isArray(obj.values) && !Array.isArray(obj.forms)) throw new Error("Not an EasyFill backup.");
       if (!confirm("Importing replaces your current values and saved forms. Continue?")) return;
       state.values = (obj.values || []).map((v) => ({
-        id: v.id || uid(), name: String(v.name ?? ""), value: String(v.value ?? ""), createdAt: v.createdAt || Date.now()
+        id: v.id || uid(), name: String(v.name ?? ""), value: String(v.value ?? ""),
+        sensitive: !!v.sensitive, createdAt: v.createdAt || Date.now()
       }));
       state.forms = (obj.forms || []).filter((f) => Array.isArray(f.fields)).map((f) => ({
         id: f.id || uid(), name: String(f.name ?? "Saved form"), host: f.host || "",

@@ -206,5 +206,17 @@ console.log("\n- privacy: toasts show keys, not values -");
   check("background sends the key with the value", /"ef-insert-value", name: v\.name, value: v\.value/.test(bg));
 }
 
+console.log("\n- sensitive values require confirmation -");
+{
+  const content = readFileSync(new URL("../src/content.js", import.meta.url), "utf-8");
+  const bg = readFileSync(new URL("../src/background.js", import.meta.url), "utf-8");
+  const opts = readFileSync(new URL("../src/options/options.js", import.meta.url), "utf-8");
+  check("sensitive inserts await confirmInsert", /if \(msg\.sensitive\)/.test(content) && /await confirmInsert\(label\)/.test(content));
+  check("background forwards the sensitive flag", /sensitive: !!v\.sensitive/.test(bg));
+  check("settings row wires a sensitive checkbox", /v\.sensitive = cb\.checked/.test(opts));
+  const seg = content.split("function confirmInsert")[1].split("browser.runtime.onMessage")[0];
+  check("confirm dialog shows only the key, never the value", !!seg && !/msg\.value/.test(seg));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

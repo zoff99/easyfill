@@ -47,8 +47,10 @@ button:hover { border-color: var(--accent); }
 button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
 button.danger { color: var(--err); }
 button.icon { padding: 6px 10px; font-weight: 500; }
-.vrow { display: grid; grid-template-columns: 24px 200px 1fr 78px 42px; gap: 10px; align-items: start; margin-bottom: 8px; border-radius: 8px; }
+.vrow { display: grid; grid-template-columns: 24px 200px 1fr 74px 78px 42px; gap: 10px; align-items: start; margin-bottom: 8px; border-radius: 8px; }
 .vhead { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 4px; }
+.sens { display: flex; justify-content: center; margin-top: 10px; }
+.sens input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
 .grip {
   width: 16px; height: 22px; margin-top: 9px; cursor: grab; user-select: none; opacity: .65;
   background: repeating-linear-gradient(to bottom, var(--muted) 0 2px, transparent 2px 6px);

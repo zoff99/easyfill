@@ -31,7 +31,9 @@ calls - ever.
   as you like. Right-click any form field, open **EasyFill**, and pick a value
   from the list - one menu level, no submenu. Reorder entries by dragging the
   grip or with the up/down buttons (keyboard friendly); the order is saved and
-  matches the right-click menu.
+  matches the right-click menu. Mark any value as **sensitive**: inserting it
+  then asks for confirmation in the page first, and neither the dialog nor
+  the toast ever displays the value content - only its short name.
 - **Right-click menu everywhere** - your values, *Fill form*, *Save this form*
   and *Settings*, directly in the browser's context menu.
 - **Toolbar popup** - save the current form, see saved forms for the current
@@ -134,7 +136,7 @@ a short window, then retries unresolved fields in a relaxed second pass.
 ```bash
 node --check src/shared.js src/content.js src/background.js   # syntax
 npm install linkedom                 # tiny DOM for tests
-node tests/smoke.test.mjs            # 49 assertions over the real engine code
+node tests/smoke.test.mjs            # 53 assertions over the real engine code
 bash tools/audit.sh                  # safety audit: no external loads, no network, ASCII-only
 ```
 

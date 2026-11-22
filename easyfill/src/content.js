@@ -522,7 +522,62 @@
     } catch (_) { }
   }
 
-  browser.runtime.onMessage.addListener((msg) => {
+  // Confirmation dialog for sensitive values. Shows ONLY the key name -
+  // never the value content. Cancel is focused by default; Esc or clicking
+  // the backdrop cancels. Lives in a closed shadow root, blocks the page
+  // while open, and removes itself on decision.
+  let confirmHost = null;
+  function confirmInsert(label) {
+    return new Promise((resolve) => {
+      if (confirmHost) { try { confirmHost.remove(); } catch (_) { } }
+      const host = document.createElement("div");
+      confirmHost = host;
+      host.id = "easyfill-confirm-host";
+      host.style.cssText = "all:initial;position:fixed;inset:0;z-index:2147483647;";
+      document.documentElement.appendChild(host);
+      const root = host.attachShadow({ mode: "closed" });
+      const dark = typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
+      const style = document.createElement("style");
+      style.textContent =
+        ".ov{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;font:14px/1.45 system-ui,sans-serif;}" +
+        ".card{background:" + (dark ? "#0f172a" : "#ffffff") + ";color:" + (dark ? "#e2e8f0" : "#0f172a") +
+        ";border-radius:12px;padding:18px 20px;max-width:340px;box-shadow:0 8px 30px rgba(0,0,0,.35);}" +
+        ".t{font-weight:600;margin:0 0 6px;}" +
+        ".m{margin:0 0 14px;font-size:13px;}" +
+        ".b{display:flex;gap:8px;justify-content:flex-end;}" +
+        "button{font:inherit;font-weight:600;border-radius:8px;padding:7px 14px;cursor:pointer;border:1px solid " +
+        (dark ? "#334155" : "#e2e8f0") + ";background:" + (dark ? "#1e293b" : "#f8fafc") + ";color:inherit;}" +
+        "button.ok{background:#059669;border-color:#059669;color:#fff;}";
+      root.appendChild(style);
+      const ov = document.createElement("div"); ov.className = "ov";
+      const card = document.createElement("div"); card.className = "card";
+      const t = document.createElement("p"); t.className = "t";
+      t.textContent = "Insert sensitive value?";
+      const m = document.createElement("p"); m.className = "m";
+      m.textContent = "Insert \"" + label + "\" into this field? The value content is not shown.";
+      const b = document.createElement("div"); b.className = "b";
+      const cancel = document.createElement("button"); cancel.textContent = "Cancel";
+      const okb = document.createElement("button"); okb.className = "ok"; okb.textContent = "Insert";
+      b.append(cancel, okb);
+      card.append(t, m, b);
+      ov.appendChild(card);
+      root.appendChild(ov);
+      const done = (val) => {
+        try { host.remove(); } catch (_) { }
+        if (confirmHost === host) confirmHost = null;
+        resolve(val);
+      };
+      cancel.addEventListener("click", () => done(false));
+      okb.addEventListener("click", () => done(true));
+      ov.addEventListener("click", (e) => { if (e.target === ov) done(false); });
+      root.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") { e.preventDefault(); done(false); }
+      });
+      requestAnimationFrame(() => cancel.focus());
+    });
+  }
+
+  browser.runtime.onMessage.addListener(async (msg) => {
     if (!msg || typeof msg.type !== "string") return;
 
     if (msg.type === "ef-ping") return Promise.resolve({ ok: true });
@@ -559,13 +614,17 @@
         resolveEditableFrom(menuTarget(msg.targetElementId)) ||
         resolveEditableFrom(contextTarget) ||
         resolveEditableFrom(deepActive());
-      if (!el) { toast("Right-click a form field to insert a value.", "err"); return Promise.resolve({ ok: false }); }
-      const ok = applyValue(el, kindOf(el), msg.value);
-      flash(el);
+      if (!el) { toast("Right-click a form field to insert a value.", "err"); return { ok: false }; }
       // Privacy: never show the inserted value itself - only its short name.
       const label = NS.preview(msg.name, 30) || "(unnamed)";
+      if (msg.sensitive) {
+        const yes = await confirmInsert(label);
+        if (!yes) { toast("Insert cancelled.", "err"); return { ok: false, cancelled: true }; }
+      }
+      const ok = applyValue(el, kindOf(el), msg.value);
+      flash(el);
       toast(ok ? "Filled: " + label : "Could not fill that field.", ok ? "ok" : "err");
-      return Promise.resolve({ ok });
+      return { ok };
     }
 
     if (msg.type === "ef-toast") { toast(msg.text, msg.kind); return; }

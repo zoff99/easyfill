@@ -87,7 +87,7 @@
         if (v && tab && tab.id != null) {
           await browser.tabs.sendMessage(
             tab.id,
-            { type: "ef-insert-value", name: v.name, value: v.value, targetElementId: info.targetElementId },
+            { type: "ef-insert-value", name: v.name, value: v.value, sensitive: !!v.sensitive, targetElementId: info.targetElementId },
             { frameId: info.frameId ?? 0 }
           ).catch(() => { });
         }
