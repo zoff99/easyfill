@@ -10,4 +10,4 @@ basedir="$_HOME_""/../"
 cd "$basedir"
 cd easyfill/
 rm -fv easyfill.xpi
-zip -r easyfill.xpi icons/ LICENSE manifest.json README.md src/
+zip -r easyfill.xpi icons/ manifest.json src/
