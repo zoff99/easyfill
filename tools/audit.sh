@@ -12,8 +12,8 @@
 #   6. contains no hidden characters (printable ASCII + line breaks only)
 #
 # Scope: the files the browser actually loads (manifest.json, src/, icons/*.svg)
-# plus README/LICENSE for the character scan. Dev-only tests/ and tools/ are
-# not loaded by the browser and are excluded.
+# plus the repo-top README.md and LICENSE for the character scan. Dev-only
+# tests/ and tools/ are not loaded by the browser and are excluded.
 #
 # Run:  bash tools/audit.sh        exit 0 = every check passed, 1 = violation
 #
@@ -30,9 +30,9 @@ mapfile -t FILES < <(find manifest.json src icons -type f ! -name '*.png' | sort
 mapfile -t JS    < <(printf '%s\n' "${FILES[@]}" | grep '\.js$')
 mapfile -t HTML  < <(printf '%s\n' "${FILES[@]}" | grep '\.html$')
 mapfile -t CSS   < <(printf '%s\n' "${FILES[@]}" | grep '\.css$')
-CHARFILES=("${FILES[@]}" README.md LICENSE)
+CHARFILES=("${FILES[@]}" ../README.md ../LICENSE)
 printf 'EasyFill source audit - %s\n' "$ROOT"
-printf 'scanning %s browser-loaded files (+ README/LICENSE for characters)\n' "${#FILES[@]}"
+printf 'scanning %s browser-loaded files (+ repo-top README.md/LICENSE for characters)\n' "${#FILES[@]}"
 
 sect "1. no remote endpoints in any loaded file"
 # XML namespace URIs (xmlns=...) are identifiers, never fetched - strip them
@@ -97,8 +97,13 @@ done
 [ "$BADAPI" = 0 ] && pass "only storage/menus/tabs/runtime - all local, none can reach the network"
 
 sect "7. no hidden characters (printable ASCII + line breaks only)"
+# README.md and LICENSE live in the repo top dir, one level above easyfill/.
+# Fail loudly if a scan target is missing so the scan can never silently skip it.
+for f in ../README.md ../LICENSE; do
+  if [ ! -f "$f" ]; then fail "character-scan target missing: $f"; fi
+done
 HITS=$(LC_ALL=C grep -n '[^ -~]' "${CHARFILES[@]}" || true)
-if [ -n "$HITS" ]; then fail "non-printable-ASCII byte found:"; printf '%s\n' "$HITS"; else pass "all scanned files are plain printable ASCII (no unicode, no zero-width, no BOM, no control chars)"; fi
+if [ -n "$HITS" ]; then fail "non-printable-ASCII byte found:"; printf '%s\n' "$HITS"; else pass "all scanned files (incl. repo-top README.md/LICENSE) are plain printable ASCII (no unicode, no zero-width, no BOM, no control chars)"; fi
 
 printf '\n========================================\n'
 if [ "$FAIL" = 0 ]; then
